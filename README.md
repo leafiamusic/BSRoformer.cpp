@@ -62,6 +62,48 @@ Options:
 
 ---
 
+## 🖥️ GUI Usage
+
+A Qt6-based GUI (`bs_roformer-gui`) is available as an alternative to the CLI.
+
+### Build the GUI
+
+```bash
+# CPU build
+cmake -B build -DBSR_BUILD_GUI=ON
+cmake --build build --config Release --parallel
+```
+
+The GUI is **not** built by default. Enable it with `-DBSR_BUILD_GUI=ON` (requires Qt6; the CLI and CI
+builds are unaffected).
+
+> **GPU backends (CUDA / Vulkan):** ggml's GPU backends are **off by default**. For the `Compute
+> backend` dropdown to offer a GPU device (e.g. an AMD card via Vulkan, or NVIDIA via CUDA), rebuild
+> with the corresponding ggml option enabled, e.g. `-DGGML_VULKAN=ON` (and ensure the Vulkan
+> headers/loader are installed) or `-DGGML_CUDA=ON`. CPU is always available. Selecting `Auto` uses
+> the best backend ggml was built with.
+
+### Using the GUI
+
+1. **Model** — point to your local `.gguf` model.
+2. **Input audio** — any decodable audio file (see conversion note below).
+3. **Output directory / base name** — stems are written as `<base>_stem_<i>.wav`
+   (or `<base>.wav` for a single stem).
+4. **Compute backend** — choose `Auto` (default), `CPU`, or `GPU`. `GPU` appears only when a
+   GPU backend (CUDA / Vulkan / …) is compiled in and a device is present.
+5. **Chunk size / Overlap** — leave blank to use the model defaults.
+6. Press **Start**. Progress is shown live and you can **Cancel** at any time.
+
+Last-used paths and the selected backend are remembered via `QSettings`.
+
+> **Note (ffmpeg):** The model only accepts 44100 Hz audio. If you load a file that is not a
+> 44100 Hz WAV (e.g. MP3, FLAC, or a different sample rate), the GUI automatically transcodes it to a
+> temporary 44100 Hz stereo WAV using **`ffmpeg`**. This requires `ffmpeg` to be installed and on your
+> `PATH`. Pure 44100 Hz WAV files skip this step entirely. To make the app fully portable you can
+> bundle an `ffmpeg` binary alongside the executable.
+
+---
+
 ## Backend Quality and Performance Notes
 
 Backend availability is controlled by the ggml build configuration. The application initializes ggml's default best backend and does not expose a general project-level backend selector. For compatibility with existing integrations, `BSR_FORCE_CPU=1` remains available as a CPU-only override.
@@ -125,6 +167,7 @@ cmake --build build --config Release --parallel
 |--------|---------|-------------|
 | `GGML_CUDA` | `ON` | Enable CUDA backend |
 | `BSR_BUILD_CLI` | `ON` | Build command line tool |
+| `BSR_BUILD_GUI` | `OFF` | Build Qt6 GUI application |
 | `BSR_BUILD_TESTS` | `OFF` | Build test suite |
 
 > **Breaking Change:** build/test prefixes were renamed from `MBR_*` to `BSR_*` with no compatibility aliases.

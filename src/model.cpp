@@ -90,8 +90,10 @@ BSRoformer::~BSRoformer() {
     if (ctx_weights_) ggml_free(ctx_weights_);
 }
 
-void BSRoformer::Initialize(const std::string& model_path) {
-    if (EnvIsSet("BSR_FORCE_CPU")) {
+void BSRoformer::Initialize(const std::string& model_path, ggml_backend_t backend) {
+    if (backend != nullptr) {
+        backend_ = backend;
+    } else if (EnvIsSet("BSR_FORCE_CPU")) {
         backend_ = ggml_backend_init_by_type(GGML_BACKEND_DEVICE_TYPE_CPU, nullptr);
     } else {
         backend_ = ggml_backend_init_best();

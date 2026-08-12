@@ -7,6 +7,9 @@
 #include <unordered_map>
 #include <cstddef>
 #include <cstdint>
+
+#include "bs_roformer/backend.h"
+
 // Forward declaration
 class BSRoformer;
 
@@ -19,8 +22,16 @@ class Inference {
 public:
     using CancelCallback = std::function<bool()>;
 
-    Inference(const std::string& model_path);
+    // `backend_id` selects the compute backend: ""/"auto" = engine default,
+    // "cpu" = CPU, "gpu" = best available GPU. See bsroformer::ListBackends().
+    Inference(const std::string& model_path, const std::string& backend_id = "");
     ~Inference();
+
+    // Enumerate available compute backends (for UI dropdowns).
+    static std::vector<bsroformer::BackendInfo> ListBackends();
+
+    // Name of the backend currently in use (e.g. for logging).
+    std::string GetBackendName() const;
 
     // Process a full audio track (interleaved stereo float32)
     // Uses overlap-add chunking to handle long files

@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(GGML_CUDA "Enable CUDA backend" ON)
 option(BSR_BUILD_TESTS "Build tests" OFF)
 option(BSR_BUILD_CLI "Build CLI application" ON)
+option(BSR_BUILD_GUI "Build Qt6 GUI application" OFF)
 
 #================================================
 # Dependencies - GGML (Flexible Resolution)
@@ -67,6 +68,9 @@ set(BSR_SOURCES
     src/model.cpp
     src/utils.cpp
     src/inference.cpp
+    src/audio.cpp
+    src/backend.cpp
+    src/convert.cpp
 )
 
 add_library(bs_roformer STATIC ${BSR_SOURCES})
@@ -77,6 +81,7 @@ target_include_directories(bs_roformer PUBLIC
 )
 target_include_directories(bs_roformer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
 target_link_libraries(bs_roformer PUBLIC ggml)
@@ -160,7 +165,6 @@ if(BSR_BUILD_CLI)
     # audio.cpp implements AudioFile utilities (using dr_wav)
     add_executable(bs_roformer-cli 
         cli/main.cpp 
-        src/audio.cpp
     )
     target_link_libraries(bs_roformer-cli PRIVATE bs_roformer)
     target_include_directories(bs_roformer-cli PRIVATE 
@@ -173,6 +177,15 @@ if(BSR_BUILD_CLI)
     endif()
     
     bsr_copy_ggml_runtime_dlls(bs_roformer-cli)
+endif()
+
+#================================================
+# GUI Application (Qt6)
+#================================================
+
+if(BSR_BUILD_GUI)
+    find_package(Qt6 COMPONENTS Widgets REQUIRED)
+    add_subdirectory(gui)
 endif()
 
 #================================================

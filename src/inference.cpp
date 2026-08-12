@@ -64,9 +64,68 @@ std::vector<float> GetWindow(int size, int fade_size) {
 }
 
 
-Inference::Inference(const std::string& model_path) {
+namespace {
+ggml_backend_t ResolveBackend(const std::string& id) {
+    if (id.empty() || id == "auto") {
+        return nullptr; // engine default
+    }
+    // Legacy aliases kept for compatibility with older settings.
+    if (id == "cpu") {
+        return ggml_backend_init_by_type(GGML_BACKEND_DEVICE_TYPE_CPU, nullptr);
+    }
+    if (id == "gpu") {
+        ggml_backend_t backend = ggml_backend_init_by_type(GGML_BACKEND_DEVICE_TYPE_GPU, nullptr);
+        if (!backend) {
+            throw std::runtime_error("No GPU backend available. Build ggml with CUDA/Vulkan support or select CPU.");
+        }
+        return backend;
+    }
+
+    // New scheme: "<reg_name>:<device_index>", e.g. "vulkan:0" or "cpu:0".
+    const size_t colon = id.find(':');
+    if (colon == std::string::npos) {
+        // Treat as a backend name (e.g. "vulkan") if possible.
+        ggml_backend_t backend = ggml_backend_init_by_name(id.c_str(), nullptr);
+        if (backend) return backend;
+        throw std::runtime_error("Unknown backend: " + id);
+    }
+
+    const std::string reg_name = id.substr(0, colon);
+    const int dev_index = std::stoi(id.substr(colon + 1));
+
+    const size_t n_regs = ggml_backend_reg_count();
+    for (size_t r = 0; r < n_regs; ++r) {
+        ggml_backend_reg_t reg = ggml_backend_reg_get(r);
+        const char* name = ggml_backend_reg_name(reg);
+        if (!name || reg_name != name) continue;
+
+        const size_t n_dev = ggml_backend_reg_dev_count(reg);
+        if (dev_index < 0 || static_cast<size_t>(dev_index) >= n_dev) break;
+
+        ggml_backend_dev_t dev = ggml_backend_reg_dev_get(reg, static_cast<size_t>(dev_index));
+        ggml_backend_t backend = ggml_backend_dev_init(dev, nullptr);
+        if (!backend) {
+            throw std::runtime_error("Failed to initialize backend: " + id);
+        }
+        return backend;
+    }
+
+    throw std::runtime_error("Backend not found: " + id);
+}
+} // namespace
+
+Inference::Inference(const std::string& model_path, const std::string& backend_id) {
+    ggml_backend_t backend = ResolveBackend(backend_id);
     model_ = std::make_unique<BSRoformer>();
-    model_->Initialize(model_path);
+    model_->Initialize(model_path, backend);
+}
+
+std::vector<bsroformer::BackendInfo> Inference::ListBackends() {
+    return bsroformer::ListBackends();
+}
+
+std::string Inference::GetBackendName() const {
+    return std::string(ggml_backend_name(model_->GetBackend()));
 }
 
 int Inference::GetDefaultChunkSize() const {

@@ -26,8 +26,10 @@ public:
     BSRoformer();
     ~BSRoformer();
 
-    // Initialize model from GGUF file
-    void Initialize(const std::string& model_path);
+    // Initialize model from GGUF file.
+    // If `backend` is non-null it is used directly; otherwise the backend is
+    // chosen automatically (BSR_FORCE_CPU env overrides to CPU, else best).
+    void Initialize(const std::string& model_path, ggml_backend_t backend = nullptr);
     
     // ========== Accessors for weights and config ==========
     
