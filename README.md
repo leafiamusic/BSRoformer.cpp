@@ -1,5 +1,14 @@
 # BSRoformer.cpp
 
+### VIBE-CODED GUI USING OPENCODE AND HY3
+only intended for personal use and shits and giggling (im bored), and lowk feel free to use this as an inspiration to code your own GUI for BSRoformer
+
+<p align="center">
+  <img src=https://media1.tenor.com/m/xUkrpp7IM3wAAAAC/zhao-zzz.gif>
+</p>
+
+---
+
 [中文](README.zh.md) | English
 
 High-performance C++ inference implementation for the **BS Roformer** and **Mel-Band-Roformer** audio source separation model.
