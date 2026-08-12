@@ -253,11 +253,15 @@ If `cancel_callback` returns `true`, `Process()` throws `std::runtime_error("Inf
 BSRoformer.cpp/
 ├── include/
 │   └── bs_roformer/
-│       ├── inference.h        # Inference Engine API
-│       └── audio.h            # Audio I/O API
+│       ├── inference.h        # Inference Engine API (incl. backend selection)
+│       ├── audio.h            # Audio I/O API
+│       ├── backend.h          # Backend enumeration (CPU/Vulkan/CUDA/...)
+│       └── convert.h          # ffmpeg transcoding + LoadCompatible()
 ├── src/
 │   ├── model.h/cpp            # Model weight loading & graph building (internal)
 │   ├── inference.cpp          # Core inference logic (STFT → Network → ISTFT)
+│   ├── backend.cpp            # Backend registry enumeration
+│   ├── convert.cpp            # ffmpeg-based audio conversion
 │   ├── stft.h                 # STFT/ISTFT implementation (Radix-2 FFT)
 │   ├── audio.cpp              # Audio read/write implementation (dr_wav)
 │   └── utils.h/cpp            # NPY loading, tensor comparison tools
@@ -265,13 +269,18 @@ BSRoformer.cpp/
 │   └── dr_libs/dr_wav.h       # dr_libs audio library
 ├── cli/
 │   └── main.cpp               # Command line tool
+├── gui/                       # Qt6 GUI application (bs_roformer-gui)
+│   ├── CMakeLists.txt
+│   ├── main.cpp               # QApplication entry point
+│   ├── mainwindow.h/cpp       # GUI layout, controls, QSettings persistence
+│   └── worker.h/cpp           # Background inference thread (progress + cancel)
 ├── scripts/
 │   ├── convert_to_gguf.py      # PyTorch → GGUF conversion tool
 │   ├── generate_test_data.py   # Test data generation script
 │   └── generate_test_audio.py  # CI test audio generation (no external files needed)
 ├── tests/                     # Unit test suite
 ├── models/                    # Model file directory
-└── CMakeLists.txt             # Build configuration
+└── CMakeLists.txt             # Build configuration (BSR_BUILD_CLI / BSR_BUILD_GUI)
 ```
 
 ---
